@@ -31,16 +31,12 @@ pipeline {
         always {
             archiveArtifacts artifacts: 'playwright-report/**/*', allowEmptyArchive: true
             
-            // Explicitly defining mail properties to bypass global Jenkins config issues
             emailext(
                 subject: "Playwright Test Report - Build #${env.BUILD_NUMBER}",
                 body: "Tests finished with status: ${currentBuild.currentResult}.\nCheck report here: ${env.BUILD_URL}",
                 to: 'shelkenikita186@gmail.com',
-                attachmentsPattern: 'playwright-report/**/*',
-                mailType: '',
-                // Forces it to use direct SMTP settings
-                replyTo: '',
-                from: 'shelkenikita186@gmail.com'
+                from: 'shelkenikita186@gmail.com',
+                attachmentsPattern: 'playwright-report/**/*'
             )
         }
     }
