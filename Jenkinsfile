@@ -2,16 +2,10 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'Node' // Matches the NodeJS tool name configured in Step 2
+        nodejs 'Node'
     }
 
     stages {
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/nikkivk1012/Playwright-Git.git'
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 bat 'npm ci'
@@ -26,7 +20,9 @@ pipeline {
 
         stage('Run Playwright Tests') {
             steps {
-                bat 'npx playwright test'
+                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                    bat 'npx playwright test'
+                }
             }
         }
     }
@@ -34,6 +30,21 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'playwright-report/**/*', allowEmptyArchive: true
+            
+            emailext(
+                subject: "Playwright Test Report - Build #${env.BUILD_NUMBER} (${env.JOB_NAME})",
+                body: """Hi,
+
+The automated Playwright test suite has completed.
+- Build Status: ${currentBuild.currentResult}
+- Console Output & Report: ${env.BUILD_URL}
+
+Regards,
+Jenkins CI
+""",
+                to: 'shelkenikita186@gmail.com',
+                attachmentsPattern: 'playwright-report/**/*'
+            )
         }
     }
 }
